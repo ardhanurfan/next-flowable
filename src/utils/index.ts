@@ -5,10 +5,12 @@ const encodedCredentials = btoa(credentials); // Encoding kredensial ke Base64
 
 export async function fetchTasks() {
   const response = await fetch(
-    `http://localhost:8080/flowable-rest/service/runtime/tasks`,
+    `http://localhost:5000/flowable-rest/service/runtime/tasks`,
     {
       headers: {
         Authorization: `Basic ${encodedCredentials}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
     }
   );
