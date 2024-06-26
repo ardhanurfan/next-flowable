@@ -17,11 +17,10 @@ const theme = createTheme({
       main: "#003049", // Warna utama biru gelap keunguan
     },
     secondary: {
-      main: "#d62828", // Warna sekunder (merah)
+      main: "#F77F00", // Warna sekunder (merah)
     },
     background: {
-      default: "#121212", // Warna latar belakang utama
-      paper: "#1e1e1e", // Warna latar belakang kertas atau area konten
+      paper: "#fcfcfc", // Warna latar belakang kertas atau area konten
     },
     text: {
       primary: "#ffffff", // Warna teks primer (putih)
