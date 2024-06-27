@@ -1,12 +1,11 @@
-interface AppDefinition {
+interface ProcessDefinition {
   id: string;
   url: string;
-  category: string | null;
-  name: string;
   key: string;
-  description: string;
   version: number;
-  resourceName: string;
-  deploymentId: string;
+  name: string;
+  description: string;
   tenantId: string;
+  deploymentId: string;
+  category: string | null;
 }

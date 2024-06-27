@@ -3,6 +3,8 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import theme from "./theme";
 import { ThemeProvider } from "@mui/material/styles";
 import { AppBar, Button, Toolbar, Typography } from "@mui/material";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,6 +21,7 @@ export default function RootLayout({
       <body>
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
+            <ToastContainer />
             <AppBar position="static">
               <Toolbar>
                 <Typography variant="h6" sx={{ flexGrow: 1 }}>
