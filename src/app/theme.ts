@@ -23,7 +23,7 @@ const theme = createTheme({
       paper: "#fcfcfc", // Warna latar belakang kertas atau area konten
     },
     text: {
-      primary: "#ffffff", // Warna teks primer (putih)
+      primary: "#003049", // Warna teks primer (putih)
       secondary: "#bdbdbd", // Warna teks sekunder (abu-abu)
     },
     error: {

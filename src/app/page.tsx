@@ -1,6 +1,8 @@
 "use client";
 
-import { fetchApp, startProcess } from "@/utils";
+import { useEffect, useState } from "react";
+import { ProcessDefinition } from "@/types";
+import { fetchApp, startProcess, usernameLogin } from "@/utils";
 import {
   Box,
   Button,
@@ -10,16 +12,33 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
+import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
-export default async function Home() {
-  const response = await fetchApp();
+const Home = () => {
+  const router = useRouter();
+  const [definitions, setDefinitions] = useState<ProcessDefinition[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const definitions = response.data as ProcessDefinition[];
+  useEffect(() => {
+    if (usernameLogin !== "admin") {
+      router.push("/task");
+      return;
+    }
 
-  if (!definitions || definitions.length === 0) {
-    return <Typography sx={{ textAlign: "center", my: 2 }}>No data</Typography>;
-  }
+    const fetchData = async () => {
+      try {
+        const response = await fetchApp();
+        setDefinitions(response);
+      } catch (error) {
+        toast.error("Failed to fetch app definitions");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [router]);
 
   const handleStartProcess = async (id: string, key: string, name: string) => {
     try {
@@ -30,14 +49,24 @@ export default async function Home() {
     }
   };
 
+  if (loading) {
+    return (
+      <Typography sx={{ textAlign: "center", my: 2 }}>Loading...</Typography>
+    );
+  }
+
+  if (definitions.length === 0) {
+    return <Typography sx={{ textAlign: "center", my: 2 }}>No data</Typography>;
+  }
+
   return (
     <Box sx={{ flexGrow: 1, mx: 0 }}>
       <Typography variant="h4" sx={{ flexGrow: 1, my: 2, mx: 2 }}>
         App Definitions
       </Typography>
       <Grid container spacing={2}>
-        {definitions.map((definition: ProcessDefinition, idx: number) => (
-          <Grid item xs={12} sm={6} md={3} key={idx.toString()}>
+        {definitions.map((definition) => (
+          <Grid item xs={12} sm={6} md={3} key={definition.id}>
             <Card
               sx={{
                 backgroundColor: "background.paper",
@@ -48,17 +77,13 @@ export default async function Home() {
             >
               <CardContent>
                 <Typography variant="h6">{definition.name}</Typography>
-                <Typography
-                  variant="subtitle1"
-                  color={"text.secondary"}
-                  key={definition.id}
-                >
+                <Typography variant="subtitle1" color="text.secondary">
                   {definition.description}
                 </Typography>
-                <Typography variant="subtitle1" key={definition.id}>
-                  {"app id :" + definition.id}
+                <Typography variant="subtitle1">
+                  {"app id: " + definition.id}
                 </Typography>
-                <Typography variant="subtitle1" key={definition.id}>
+                <Typography variant="subtitle1">
                   {"version: " + definition.version}
                 </Typography>
                 <CardActions>
@@ -85,4 +110,6 @@ export default async function Home() {
       </Grid>
     </Box>
   );
-}
+};
+
+export default Home;

@@ -1,11 +1,13 @@
-import { unstable_noStore as noStore, revalidatePath } from "next/cache";
+import { Task } from "@/types";
+import { unstable_noStore as noStore } from "next/cache";
 
-export const username: string = "admin";
-const password: string = "test";
-const credentials = `${username}:${password}`;
-const encodedCredentials = btoa(credentials); // Encoding kredensial ke Base64
+export const usernameLogin: string = "arvel";
+
+const credentialsRest = "admin:test";
+const encodedCredentials = btoa(credentialsRest); // Encoding kredensial ke Base64
 
 export async function fetchTasks() {
+  noStore();
   const response = await fetch(
     `http://localhost:5000/flowable-rest/service/runtime/tasks`,
     {
@@ -20,7 +22,8 @@ export async function fetchTasks() {
   const result = await response.json();
 
   if (response.ok) {
-    return result;
+    const data = result.data as Task[];
+    return data.filter((task) => task.assignee === usernameLogin);
   }
 
   throw result;
@@ -42,7 +45,7 @@ export async function fetchApp() {
   const result = await response.json();
 
   if (response.ok) {
-    return result;
+    return result.data;
   }
 
   throw result;
@@ -82,11 +85,62 @@ export async function startProcess({
 
   const result = await response.json();
 
-  console.log(result);
+  if (response.ok) {
+    return result;
+  }
+
+  throw result;
+}
+
+export async function fetchTaskForm({ taskId }: { taskId: string }) {
+  noStore();
+  const response = await fetch(
+    `http://localhost:5000/flowable-rest/service/runtime/tasks/${taskId}/form`,
+    {
+      headers: {
+        Authorization: `Basic ${encodedCredentials}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    }
+  );
+
+  const result = await response.json();
 
   if (response.ok) {
     return result;
   }
 
   throw result;
+}
+
+export async function postTaskForm({
+  taskId,
+  formValues,
+}: {
+  taskId: string;
+  formValues: any;
+}) {
+  const response = await fetch(
+    `http://localhost:5000/flowable-rest/service/runtime/tasks/${taskId}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${encodedCredentials}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        action: "complete",
+        variables: Object.entries(formValues).map(([name, value]) => ({
+          name,
+          value,
+        })),
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw response;
+  }
 }

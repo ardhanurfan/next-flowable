@@ -5,6 +5,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { AppBar, Button, Toolbar, Typography } from "@mui/material";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { usernameLogin } from "@/utils";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -27,7 +28,14 @@ export default function RootLayout({
                 <Typography variant="h6" sx={{ flexGrow: 1 }}>
                   Flowable
                 </Typography>
-                <Button color="inherit">Task</Button>
+                {usernameLogin === "admin" && (
+                  <Button href="/" color="inherit">
+                    Process
+                  </Button>
+                )}
+                <Button href="/task" color="inherit">
+                  Task
+                </Button>
               </Toolbar>
             </AppBar>
             {children}
