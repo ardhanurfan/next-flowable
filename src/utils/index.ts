@@ -1,13 +1,11 @@
 import { Task } from "@/types";
-import { unstable_noStore as noStore } from "next/cache";
 
-export const usernameLogin: string = "arvel";
+export const usernameLogin: string = "admin";
 
 const credentialsRest = "admin:test";
 const encodedCredentials = btoa(credentialsRest); // Encoding kredensial ke Base64
 
 export async function fetchTasks() {
-  noStore();
   const response = await fetch(
     `http://localhost:5000/flowable-rest/service/runtime/tasks`,
     {
@@ -30,7 +28,6 @@ export async function fetchTasks() {
 }
 
 export async function fetchApp() {
-  noStore();
   const response = await fetch(
     `http://localhost:5000/flowable-rest/service/repository/process-definitions?latest=true`,
     {
@@ -93,7 +90,6 @@ export async function startProcess({
 }
 
 export async function fetchTaskForm({ taskId }: { taskId: string }) {
-  noStore();
   const response = await fetch(
     `http://localhost:5000/flowable-rest/service/runtime/tasks/${taskId}/form`,
     {
@@ -130,13 +126,15 @@ export async function postTaskForm({
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({
-        action: "complete",
-        variables: Object.entries(formValues).map(([name, value]) => ({
-          name,
-          value,
-        })),
-      }),
+      body:
+        formValues &&
+        JSON.stringify({
+          action: "complete",
+          variables: Object.entries(formValues).map(([name, value]) => ({
+            name,
+            value,
+          })),
+        }),
     }
   );
 

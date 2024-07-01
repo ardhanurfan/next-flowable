@@ -10,6 +10,7 @@ import {
   Card,
   CardActions,
   CardContent,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
@@ -37,33 +38,44 @@ const TaskPage = () => {
   const [formValues, setFormValues] = useState<any>({});
   const [selected, setSelected] = useState<string>("");
 
+  const loadTasks = async () => {
+    try {
+      const fetchedTasks = await fetchTasks();
+      setTasks(fetchedTasks);
+    } catch (error) {
+      toast.error("Failed to fetch tasks");
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
   useEffect(() => {
-    const loadTasks = async () => {
-      try {
-        const fetchedTasks = await fetchTasks();
-        setTasks(fetchedTasks);
-      } catch (error) {
-        toast.error("Failed to fetch tasks");
-      } finally {
-        setLoadingTasks(false);
-      }
-    };
-
     loadTasks();
   }, []);
 
   const loadForm = async (taskId: string) => {
-    true;
     try {
       const fetchedForm = await fetchTaskForm({
         taskId: taskId,
       });
       setForm(fetchedForm);
+      initFormValues(fetchedForm);
     } catch (error) {
       toast.error("Failed to fetch form");
-    } finally {
-      false;
     }
+  };
+
+  const initFormValues = (fetchedForm: Form) => {
+    const formValues: any = {};
+    fetchedForm.fields.forEach((field, index) => {
+      if (index != 0 && !field.readOnly) {
+        if (field.type === "boolean") {
+          formValues[field.id] = field.value || false;
+        } else {
+          formValues[field.id] = field.value || "";
+        }
+      }
+    });
+    setFormValues(formValues);
   };
 
   // Handle input change for text fields
@@ -75,6 +87,14 @@ const TaskPage = () => {
     setFormValues((prevValues: any) => ({
       ...prevValues,
       [fieldId]: value,
+    }));
+  };
+
+  // Handle input change for text fields
+  const handleCheckboxChange = (checked: boolean, fieldId: string) => {
+    setFormValues((prevValues: any) => ({
+      ...prevValues,
+      [fieldId]: checked,
     }));
   };
 
@@ -90,22 +110,12 @@ const TaskPage = () => {
     }));
   };
 
-  // Handle radio button change
-  const handleRadioChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    fieldId: string
-  ) => {
-    const value = event.target.value;
-    setFormValues((prevValues: any) => ({
-      ...prevValues,
-      [fieldId]: value,
-    }));
-  };
-
   const handleSubmit = async () => {
+    console.log(formValues);
     try {
       await postTaskForm({ taskId: selected, formValues: formValues });
       toast.success("Submit form success");
+      loadTasks();
       setShowPopUp(false);
     } catch (error) {
       console.log(error);
@@ -130,22 +140,45 @@ const TaskPage = () => {
           {form && (
             <Box component="form" sx={{ p: 2, backgroundColor: "white" }}>
               {form.fields.map((field) => {
-                if (field.type == "text") {
+                if (field.type == "text" || field.type == "integer") {
                   return (
                     <TextField
+                      required={field.required}
                       key={field.id}
                       label={field.name}
                       sx={{ mb: 2, color: "black" }}
-                      value={formValues[field.id] || ""}
+                      disabled={field.readOnly}
+                      value={field.value || formValues[field.id] || ""}
                       onChange={(event) => handleInputChange(event, field.id)}
                       variant="outlined"
                       fullWidth
                       margin="normal"
+                      type={field.type == "integer" ? "number" : "text"}
+                    />
+                  );
+                } else if (field.type == "boolean") {
+                  return (
+                    <FormControlLabel
+                      label={field.name}
+                      control={
+                        <Checkbox
+                          disabled={field.readOnly}
+                          checked={field.value || formValues[field.id] || false}
+                          onChange={(_, checked) =>
+                            handleCheckboxChange(checked, field.id)
+                          }
+                        />
+                      }
                     />
                   );
                 } else if (field.type == "dropdown" && "options" in field) {
                   return (
-                    <FormControl fullWidth sx={{ mb: 2 }}>
+                    <FormControl
+                      disabled={field.readOnly}
+                      required={field.required}
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    >
                       <InputLabel id="demo-simple-select-label">
                         {field.name}
                       </InputLabel>
@@ -153,7 +186,7 @@ const TaskPage = () => {
                         labelId="demo-simple-select-label"
                         label={field.name}
                         id="demo-simple-select"
-                        value={formValues[field.id] || ""}
+                        value={field.value || formValues[field.id] || ""}
                         onChange={(event) =>
                           handleSelectChange(event, field.id)
                         }
@@ -175,7 +208,12 @@ const TaskPage = () => {
                   "options" in field
                 ) {
                   return (
-                    <FormControl fullWidth sx={{ mb: 2 }}>
+                    <FormControl
+                      disabled={field.readOnly}
+                      required={field.required}
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    >
                       <FormLabel id="demo-row-radio-buttons-group-label">
                         {field.name}
                       </FormLabel>
@@ -183,8 +221,8 @@ const TaskPage = () => {
                         row
                         aria-labelledby="demo-row-radio-buttons-group-label"
                         name="row-radio-buttons-group"
-                        value={formValues[field.id] || ""}
-                        onChange={(event) => handleRadioChange(event, field.id)}
+                        value={field.value || formValues[field.id] || ""}
+                        onChange={(event) => handleInputChange(event, field.id)}
                       >
                         {field.options?.map((option, index) => {
                           return index == 0 ? (
