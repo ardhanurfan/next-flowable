@@ -19,3 +19,13 @@ export interface Task {
   dueDate?: Date | null;
   formKey: string;
 }
+
+export interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  url: string;
+  email: string;
+  pictureUrl: string;
+}

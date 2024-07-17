@@ -1,9 +1,9 @@
 "use client";
 
 import { ChangeEvent, useEffect, useState } from "react";
-import { Task } from "@/types";
-import { Form } from "@/types/form";
-import { fetchTaskForm, fetchTasks, postTaskForm } from "@/utils";
+import { Task, User } from "@/types";
+import { Form, FormField } from "@/types/form";
+import { fetchTaskForm, fetchTasks, fetchUsers, postTaskForm } from "@/utils";
 import {
   Box,
   Button,
@@ -27,7 +27,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 
 const TaskPage = () => {
@@ -37,6 +36,7 @@ const TaskPage = () => {
   const [loadingTasks, setLoadingTasks] = useState(true);
   const [formValues, setFormValues] = useState<any>({});
   const [selected, setSelected] = useState<string>("");
+  const [users, setUsers] = useState<User[]>([]);
 
   const loadTasks = async () => {
     try {
@@ -59,15 +59,30 @@ const TaskPage = () => {
       });
       setForm(fetchedForm);
       initFormValues(fetchedForm);
+
+      if (
+        fetchedForm.fields.find((field: FormField) => field.type === "people")
+      ) {
+        await loadUsers();
+      }
     } catch (error) {
       toast.error("Failed to fetch form");
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const fetchedUsers = await fetchUsers();
+      setUsers(fetchedUsers);
+    } catch (error) {
+      toast.error("Failed to fetch users");
     }
   };
 
   const initFormValues = (fetchedForm: Form) => {
     const formValues: any = {};
     fetchedForm.fields.forEach((field, index) => {
-      if (index != 0 && !field.readOnly) {
+      if (index != 0) {
         if (field.type === "boolean") {
           formValues[field.id] = field.value || false;
         } else {
@@ -135,7 +150,7 @@ const TaskPage = () => {
 
   return (
     <>
-      <Dialog open={showPopUp} onClose={() => setShowPopUp(false)}>
+      <Dialog fullWidth open={showPopUp} onClose={() => setShowPopUp(false)}>
         <DialogContent>
           {form && (
             <Box component="form" sx={{ p: 2, backgroundColor: "white" }}>
@@ -148,7 +163,7 @@ const TaskPage = () => {
                       label={field.name}
                       sx={{ mb: 2, color: "black" }}
                       disabled={field.readOnly}
-                      value={field.value || formValues[field.id] || ""}
+                      value={formValues[field.id] || ""}
                       onChange={(event) => handleInputChange(event, field.id)}
                       variant="outlined"
                       fullWidth
@@ -163,7 +178,7 @@ const TaskPage = () => {
                       control={
                         <Checkbox
                           disabled={field.readOnly}
-                          checked={field.value || formValues[field.id] || false}
+                          checked={formValues[field.id] || false}
                           onChange={(_, checked) =>
                             handleCheckboxChange(checked, field.id)
                           }
@@ -186,7 +201,7 @@ const TaskPage = () => {
                         labelId="demo-simple-select-label"
                         label={field.name}
                         id="demo-simple-select"
-                        value={field.value || formValues[field.id] || ""}
+                        value={formValues[field.id] || ""}
                         onChange={(event) =>
                           handleSelectChange(event, field.id)
                         }
@@ -221,7 +236,7 @@ const TaskPage = () => {
                         row
                         aria-labelledby="demo-row-radio-buttons-group-label"
                         name="row-radio-buttons-group"
-                        value={field.value || formValues[field.id] || ""}
+                        value={formValues[field.id] || ""}
                         onChange={(event) => handleInputChange(event, field.id)}
                       >
                         {field.options?.map((option, index) => {
@@ -239,12 +254,43 @@ const TaskPage = () => {
                       </RadioGroup>
                     </FormControl>
                   );
+                } else if (field.type == "people") {
+                  return (
+                    <FormControl
+                      disabled={field.readOnly}
+                      required={field.required}
+                      fullWidth
+                      sx={{ mb: 2 }}
+                    >
+                      <InputLabel id="demo-simple-select-label">
+                        {field.name}
+                      </InputLabel>
+                      <Select
+                        labelId="demo-simple-select-label"
+                        label={field.name}
+                        id="demo-simple-select"
+                        value={formValues[field.id] || ""}
+                        onChange={(event) =>
+                          handleSelectChange(event, field.id)
+                        }
+                      >
+                        {users.map((option) => {
+                          return (
+                            <MenuItem key={option.id} value={option.firstName}>
+                              {option.firstName}
+                            </MenuItem>
+                          );
+                        })}
+                      </Select>
+                    </FormControl>
+                  );
                 } else {
                   return (
                     <Typography
                       fontSize={24}
                       fontWeight={"bold"}
                       key={field.id}
+                      sx={{ mb: 2 }}
                     >
                       {field.name}
                     </Typography>

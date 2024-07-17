@@ -7,7 +7,7 @@ const encodedCredentials = btoa(credentialsRest); // Encoding kredensial ke Base
 
 export async function fetchTasks() {
   const response = await fetch(
-    `http://localhost:5000/flowable-rest/service/runtime/tasks`,
+    `http://localhost:5000/flowable-rest/service/runtime/tasks?assignee=${usernameLogin}&size=100`,
     {
       headers: {
         Authorization: `Basic ${encodedCredentials}`,
@@ -20,8 +20,9 @@ export async function fetchTasks() {
   const result = await response.json();
 
   if (response.ok) {
-    const data = result.data as Task[];
-    return data.filter((task) => task.assignee === usernameLogin);
+    // const data = result.data as Task[];
+    // return data.filter((task) => task.assignee === usernameLogin);
+    return result.data as Task[];
   }
 
   throw result;
@@ -141,4 +142,25 @@ export async function postTaskForm({
   if (!response.ok) {
     throw response;
   }
+}
+
+export async function fetchUsers() {
+  const response = await fetch(
+    `http://localhost:5000/flowable-rest/service/identity/users`,
+    {
+      headers: {
+        Authorization: `Basic ${encodedCredentials}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    }
+  );
+
+  const result = await response.json();
+
+  if (response.ok) {
+    return result.data;
+  }
+
+  throw result;
 }
